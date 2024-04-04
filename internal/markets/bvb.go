@@ -2,6 +2,7 @@ package markets
 
 import (
 	"fmt"
+	"github.com/murarustefaan/stockhunt/internal/data"
 	"io"
 	"strconv"
 	"strings"
@@ -11,21 +12,21 @@ import (
 )
 
 const (
-	IndexISIN = iota
-	IndexName
-	IndexValue
-	IndexYield
-	IndexExDate
-	IndexPaymentDate
+	indexISIN = iota
+	indexName
+	indexValue
+	indexYield
+	indexExDate
+	indexPaymentDate
 	_
-	IndexRegistrationDate
+	indexRegistrationDate
 )
 
 const (
 	dateFormat = "2.01.2006"
 )
 
-func ParseDividendInfoPage(body io.Reader) ([]CompanyDividendInfo, error) {
+func ParseDividendInfoPage(body io.Reader) ([]data.CompanyDividendInfo, error) {
 	doc, err := goquery.NewDocumentFromReader(body)
 	if err != nil {
 		return nil, err
@@ -36,27 +37,29 @@ func ParseDividendInfoPage(body io.Reader) ([]CompanyDividendInfo, error) {
 		return nil, fmt.Errorf("failed to find dividend info table")
 	}
 
-	results := make([]CompanyDividendInfo, 0)
+	results := make([]data.CompanyDividendInfo, 0)
 
 	tableRows.Each(func(i int, row *goquery.Selection) {
-		record := CompanyDividendInfo{}
+		record := data.CompanyDividendInfo{
+			Market: "BVB",
+		}
 		row.Find("td").Each(func(i int, cell *goquery.Selection) {
 			switch i {
-			case IndexISIN:
+			case indexISIN:
 				record.ISIN = strings.TrimSpace(cell.Find("a strong").Text())
-			case IndexName:
+			case indexName:
 				record.Name = strings.TrimSpace(cell.Text())
-			case IndexValue:
+			case indexValue:
 				raw := normalizeLocale(cell.Text())
 				record.Value, _ = strconv.ParseFloat(raw, 64)
-			case IndexYield:
+			case indexYield:
 				raw := normalizeLocale(cell.Text())
 				record.Yield, _ = strconv.ParseFloat(raw, 64)
-			case IndexExDate:
+			case indexExDate:
 				record.ExDate, _ = time.Parse(dateFormat, strings.TrimSpace(cell.Text()))
-			case IndexPaymentDate:
+			case indexPaymentDate:
 				record.PaymentDate, _ = time.Parse(dateFormat, strings.TrimSpace(cell.Text()))
-			case IndexRegistrationDate:
+			case indexRegistrationDate:
 				record.RegistrationDate, _ = time.Parse(dateFormat, strings.TrimSpace(cell.Text()))
 			}
 		})
