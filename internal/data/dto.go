@@ -1,10 +1,11 @@
-package markets
+package data
 
 import "time"
 
 type CompanyDividendInfo struct {
-	Name string
-	ISIN string
+	Market string
+	Name   string
+	ISIN   string
 
 	Yield float64
 	Value float64
